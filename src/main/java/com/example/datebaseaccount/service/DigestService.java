@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.example.datebaseaccount;
+package com.example.datebaseaccount.service;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
