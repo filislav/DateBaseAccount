@@ -5,6 +5,9 @@
  */
 package com.example.datebaseaccount.dao.domain;
 
+import com.example.datebaseaccount.service.DigestService;
+import com.example.datebaseaccount.service.ServiceFactory;
+
 /**
  *
  * @author slava
@@ -19,9 +22,10 @@ public class Customer {
     }
 
     public Customer(String name,String email, String password) {
+        DigestService ds = ServiceFactory.getDigestService();
         this.name = name;
         this.email = email;
-        this.password = password;
+        this.password = ds.digest(password);
     }
 
     public Integer getId() {

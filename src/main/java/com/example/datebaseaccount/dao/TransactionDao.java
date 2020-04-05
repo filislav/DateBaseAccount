@@ -5,7 +5,6 @@
  */
 package com.example.datebaseaccount.dao;
 
-import static com.example.datebaseaccount.dao.DaoFactory.getConnection;
 import com.example.datebaseaccount.dao.domain.Transaction;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,23 +12,23 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sql.DataSource;
 
 /**
  *
  * @author slava
  */
 public class TransactionDao implements Dao<Transaction,Integer> {
-    private static TransactionDao transactionDao;
-    public static TransactionDao getTransactionDao(){
-        if(transactionDao == null){
-            transactionDao = new TransactionDao();
-        }
-        return transactionDao;
-    } 
+    private final DataSource dataSource;
+    
+    public TransactionDao(DataSource dataSource){
+        this.dataSource = dataSource;
+    }
+    
     @Override
     public Transaction findById(Integer id) {
         Transaction transaction = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select * "
                     + "from transaction where id=?;");
             ps.setInt(1, id);
@@ -48,7 +47,7 @@ public class TransactionDao implements Dao<Transaction,Integer> {
     public List<Transaction> findByAll() {
         List<Transaction> listTrans = new ArrayList<>();
         Transaction transaction = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select * "
                     + "from transaction;");
             ResultSet rs = ps.executeQuery();
@@ -65,7 +64,7 @@ public class TransactionDao implements Dao<Transaction,Integer> {
     @Override
     public Transaction insert(Transaction domain) {
         Transaction transaction = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             transaction = setTransaction(domain);
             PreparedStatement ps = connection.prepareStatement("insert into "
                     + "transaction (sum_tran,count_id,transaction_cat_id,date)"
@@ -84,7 +83,7 @@ public class TransactionDao implements Dao<Transaction,Integer> {
     @Override
     public Transaction update(Transaction domain) {
         Transaction transaction = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
         transaction = setTransaction(domain);
         PreparedStatement ps = connection.prepareStatement("update transaction "
                 + "set sum_tran =?,count_id=?,transaction_cat_id=?,date=? where id = ?;");
@@ -102,7 +101,7 @@ public class TransactionDao implements Dao<Transaction,Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("delete from "
                     + "transaction where id =?;");
             ps.setInt(1, id);
@@ -139,7 +138,7 @@ public class TransactionDao implements Dao<Transaction,Integer> {
     }
     public int sumTransactionCount(Integer countId){
         int sum= 0;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select sum(sum_tran) from transaction where count_id=?;");
             ps.setInt(1, countId);
             ResultSet rs = ps.executeQuery();

@@ -5,7 +5,6 @@
  */
 package com.example.datebaseaccount.dao;
 
-import static com.example.datebaseaccount.dao.DaoFactory.getConnection;
 import com.example.datebaseaccount.dao.domain.Count;
 import java.sql.Connection;
 import java.sql.Date;
@@ -18,24 +17,23 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sql.DataSource;
 
 /**
  *
  * @author slava
  */
 public class CountDao implements Dao<Count,Integer> {
-    private static CountDao countDao;
-    public static CountDao getCountDao(){
-        if(countDao==null){
-            countDao = new CountDao();
-        }
-        return countDao;
-    } 
+   private final DataSource dataSource;
+   
+   public CountDao(DataSource dataSource){
+       this.dataSource = dataSource;
+   }
     
     @Override
     public Count findById(Integer id) {
         Count count = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select*from "
                     + "count where id=?;");
             ps.setInt(1, id);
@@ -52,7 +50,7 @@ public class CountDao implements Dao<Count,Integer> {
     @Override
     public List<Count> findByAll() {
         List<Count> countList = new ArrayList<>();
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select * from count;");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
@@ -69,7 +67,7 @@ public class CountDao implements Dao<Count,Integer> {
     public Count insert(Count domain) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Count count = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             count = setCount(domain);
             PreparedStatement ps = connection.prepareStatement("insert into "
                     + "count(name,sum,user_id,date)values(?,?,?,?);");
@@ -88,7 +86,7 @@ public class CountDao implements Dao<Count,Integer> {
     @Override
     public Count update(Count domain) {
         Count count = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             count = setCount(domain);
             PreparedStatement ps = connection.prepareStatement("update count "
                     + "set name=?,sum=?,user_id=?,date =? where id = ?;");
@@ -106,7 +104,7 @@ public class CountDao implements Dao<Count,Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("delete from "
                     + "count where id=?;");
             ps.setInt(1, id);

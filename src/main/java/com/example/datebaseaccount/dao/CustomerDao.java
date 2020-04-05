@@ -6,7 +6,6 @@
 package com.example.datebaseaccount.dao;
 
 import static com.example.datebaseaccount.dao.CountDao.setCount;
-import static com.example.datebaseaccount.dao.DaoFactory.getConnection;
 import com.example.datebaseaccount.dao.domain.Count;
 import com.example.datebaseaccount.dao.domain.Customer;
 import java.sql.Connection;
@@ -17,24 +16,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.sql.DataSource;
 
 /**
  *
  * @author slava
  */
 public class CustomerDao implements Dao<Customer,Integer> {
-    private static CustomerDao customerDao;
-    public static CustomerDao getCustomerDao(){
-        if(customerDao==null){
-            customerDao = new CustomerDao();
-        }
-        return customerDao;
+    private final DataSource dataSource;
+    
+    public CustomerDao(DataSource dataSource){
+        this.dataSource = dataSource;
     }
 
     @Override
     public Customer findById(Integer id) {
         Customer customer = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select*from "
                     + "customer where id=?;");
             ps.setInt(1,id);
@@ -47,12 +45,25 @@ public class CustomerDao implements Dao<Customer,Integer> {
         }
         return customer;
     }
-    
+    public Customer findByEmail(String email){
+        Customer customer = null;
+        try(Connection connection = dataSource.getConnection()){
+            PreparedStatement ps = connection.prepareStatement("select*from customer where email=?;");
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                customer = setCustomer(rs);
+            }
+        }catch(SQLException e){
+            System.err.println("Ошибка в SQL запросе findByEmail");
+        }
+        return customer;
+    }
     @Override
     public List<Customer> findByAll() {
         List<Customer> custList = new ArrayList<>();
         Customer customer =null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
         PreparedStatement ps = connection.prepareStatement("select * "
                 + "from customer;");
         ResultSet rs = ps.executeQuery();
@@ -69,7 +80,7 @@ public class CustomerDao implements Dao<Customer,Integer> {
     @Override
     public Customer insert(Customer domain) {
         Customer customer = new Customer();
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
         customer = setCustomer(domain);
             PreparedStatement psInsert = connection.prepareStatement("insert "
                     + "into customer(name,email,password)values(?,?,?);");
@@ -87,7 +98,7 @@ public class CustomerDao implements Dao<Customer,Integer> {
     @Override
     public Customer update(Customer domain) {
         Customer customer = new Customer();
-        try(Connection connection  = getConnection()){
+        try(Connection connection  = dataSource.getConnection()){
         customer = setCustomer(domain);
             PreparedStatement ps = connection.prepareStatement("update customer "
                     + "set name=? , email=?, password = ? where id=?;");
@@ -106,7 +117,7 @@ public class CustomerDao implements Dao<Customer,Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("delete from "
                     + "customer where id=?;");
             ps.setInt(1,id);
@@ -136,7 +147,7 @@ public class CustomerDao implements Dao<Customer,Integer> {
     public Map<Integer,List<Count>> customerCounts(Integer id){
         Map<Integer,List<Count>> countMap = new HashMap<>();
         List<Count>countList = new ArrayList<>();
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select co.id, "
                     + "co.name, co.sum,co.user_id,co.date from customer as cu "
                     + "inner join count as co on co.user_id=cu.id where cu.id=?;");
@@ -150,7 +161,6 @@ public class CustomerDao implements Dao<Customer,Integer> {
             System.out.println("В мапу положили");
         }catch(SQLException e){
             System.err.println("Ошибка в SQL запросе customerCounts");
-            e.printStackTrace();
         }
         return countMap;
     }

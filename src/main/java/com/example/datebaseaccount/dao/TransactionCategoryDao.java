@@ -5,7 +5,6 @@
  */
 package com.example.datebaseaccount.dao;
 
-import static com.example.datebaseaccount.dao.DaoFactory.getConnection;
 import com.example.datebaseaccount.dao.domain.TransactionCategory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,25 +12,23 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 
 /**
  *
  * @author slava
  */
 public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
-    private static TransactionCategoryDao transactionCategoryDao;
-    public static TransactionCategoryDao getTransactionCategoryDao(){
-    if(transactionCategoryDao == null){
-         transactionCategoryDao = new TransactionCategoryDao();
+    private final DataSource dataSource;
+    public TransactionCategoryDao(DataSource dataSource){
+        this.dataSource = dataSource;
     }
-    return transactionCategoryDao;
-    }
-
 
     @Override
     public TransactionCategory findById(Integer id) {
         TransactionCategory transactionCategory = null;
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select * "
                     + "from transaction_category where id=?;");
             ps.setInt(1, id);
@@ -50,7 +47,7 @@ public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
     public List<TransactionCategory> findByAll() {
         TransactionCategory transactionCategory = null;
         List<TransactionCategory> transCatList = new ArrayList<>();
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("select*from transaction_category;");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
@@ -66,7 +63,7 @@ public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
     @Override
     public TransactionCategory insert(TransactionCategory domain) {
         TransactionCategory transactionCategory = setTransactionCategory(domain);
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("insert into transaction_category (name) values (?);");
             ps.setString(1,transactionCategory.getName());
             ps.executeUpdate();            
@@ -79,7 +76,7 @@ public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
     @Override
     public TransactionCategory update(TransactionCategory domain) {
         TransactionCategory transactionCategory = setTransactionCategory(domain);
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("update transaction_category set name = ? where id =?;");
             ps.setString(1,transactionCategory.getName());
             ps.setInt(2, transactionCategory.getId());
@@ -92,7 +89,7 @@ public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
 
     @Override
     public boolean delete(Integer id) {
-        try(Connection connection = getConnection()){
+        try(Connection connection = dataSource.getConnection()){
             PreparedStatement ps = connection.prepareStatement("delete from transaction_category where id = ?;");
             ps.setInt(1,id);
             ps.executeUpdate();
