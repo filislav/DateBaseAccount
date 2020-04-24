@@ -6,11 +6,15 @@
 package com.example.datebaseaccount.dao;
 
 import com.example.datebaseaccount.dao.domain.Count;
+import com.example.datebaseaccount.dao.domain.Transaction;
+import com.example.datebaseaccount.dao.domain.TransactionCategory;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -136,5 +140,43 @@ public class CountDao implements Dao<Count,Integer> {
     public static java.sql.Date convDateToSQLDate(java.util.Date date){
         java.sql.Date sDate = new java.sql.Date(date.getTime());
         return sDate;
+    }
+    public void makeNegative(int id,int idLuck, int sumTrans){
+        try(Connection connection = dataSource.getConnection()){
+            connection.setAutoCommit(false);
+            Savepoint savepoint = connection.setSavepoint("otkat");
+            try{
+                PreparedStatement ps = connection.prepareStatement(
+                        "update count set sum = sum - ? where id = ?;");
+                System.out.println("Первая часть транзакции прошла");
+                ps.setInt(1,sumTrans);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                ps = connection.prepareStatement("update count set sum = sum + ? where id = ?;");
+                ps.setInt(1, sumTrans);
+                ps.setInt(2, idLuck);
+                ps.executeUpdate();
+                System.out.println("Вотрая часть транзакции прошла");
+                connection.commit();
+            }catch(Exception e){
+                connection.rollback(savepoint);
+                connection.releaseSavepoint(savepoint);
+                System.out.println("Ошибка транзакции");
+            }
+        }catch(SQLException e){
+            System.err.println("Ошибка SQL запроса makeNegative Count");
+        }
+    }
+    
+    public void makeTransactionNegative(int id,int idLuck,int sumTrans,int transCatId) throws ParseException{
+        TransactionDao tranDao = DaoFactoryNew.getTransactionDao();
+        makeNegative(id,idLuck,sumTrans);
+        TransactionCategoryDao transCatDao = DaoFactoryNew.getTransactionCategoryDao();
+        TransactionCategory transCat = transCatDao.findById(transCatId);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        DateTimeFormatter dtf =DateTimeFormatter.ofPattern("yyyy-MM-dd");     
+        tranDao.insert(new Transaction(sumTrans,id,transCat.getId(), 
+                sdf.parse(dtf.format(LocalDateTime.now()))));
+        
     }
 }

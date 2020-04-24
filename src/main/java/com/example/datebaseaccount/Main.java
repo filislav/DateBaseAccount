@@ -15,8 +15,13 @@ import com.example.datebaseaccount.dao.domain.Customer;
 import com.example.datebaseaccount.dao.domain.Transaction;
 import com.example.datebaseaccount.dao.domain.TransactionCategory;
 import com.example.datebaseaccount.dto.CustomerDto;
+import com.example.datebaseaccount.service.DigestService;
 import com.example.datebaseaccount.service.SecurityService;
 import com.example.datebaseaccount.service.ServiceFactory;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.Date;
@@ -33,6 +38,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -44,11 +50,25 @@ import javax.sql.DataSource;
 public class Main {
     public static void main(String[] args) {    
 //        CustomerDao customerDao = DaoFactoryNew.getCustomerDao();
-//        customerDao.delete(1);
 //        customerDao.insert(new Customer("Ivan","ivan91@gmail.com","tree")); 
-        SecurityService ss = ServiceFactory.getSecurityService();
-        CustomerDto customerDto = ss.auth("ivan91@gmail.com", "tree");
-        System.out.println(customerDto);
-        
+//        SecurityService ss = ServiceFactory.getSecurityService();
+//        Scanner scanner = new Scanner(System.in);
+//        System.out.println("Веедите адресс электронной почты");
+//        String email = scanner.nextLine();
+//        System.out.println("Веедите пароль");
+//        String password = scanner.nextLine();
+//        CustomerDto customerDto = ss.auth(email,password);
+//        if(customerDto==null){
+//            CustomerDto customerNew = ss.registration();
+//            System.out.println(customerNew);
+//        }
+//        System.out.printf("Поздравляем %s, вы вошли в базу данных\n",customerDto.getName());
+//        System.out.println(customerDto);
+          CountDao countDao = DaoFactoryNew.getCountDao();
+        try {
+            countDao.makeTransactionNegative(2,3,50, 1);
+        } catch (ParseException ex) {
+            System.out.println("Парсинг даты не прошел");
+        }
     }
 }

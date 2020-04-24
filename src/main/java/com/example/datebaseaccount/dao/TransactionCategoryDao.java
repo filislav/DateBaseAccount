@@ -48,7 +48,7 @@ public class TransactionCategoryDao implements Dao<TransactionCategory,Integer>{
         TransactionCategory transactionCategory = null;
         List<TransactionCategory> transCatList = new ArrayList<>();
         try(Connection connection = dataSource.getConnection()){
-            PreparedStatement ps = connection.prepareStatement("select*from transaction_category;");
+            PreparedStatement ps = connection.prepareStatement("select * from transaction_category;");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 transactionCategory = setTransactionCategory(rs);
